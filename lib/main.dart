@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(MyApp());
@@ -40,33 +41,34 @@ class _ScrollVisibleState extends State<ScrollVisible> {
             child: Column(
               children: <Widget>[
                 Container(
-                  height: 400,
-                  color: Colors.blue,
-                ),
-                Container(
-                  height: 300,
-                  color: Colors.yellow,
+                  height: 1000,
+                  color: Colors.white,
                 ),
                 Container(
                   key: _visibleKey,
-                  height: 150,
-                  color: Colors.white,
+                  height: 400,
+                  color: Colors.red,
                   child: Center(
-                    child: Text("Visible测试组件"),
+                    child: Text(
+                      "Visible测试组件",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 Container(
-                  height: 600,
-                  color: Colors.red,
+                  height: 1000,
+                  color: Colors.white,
                 ),
               ],
             ),
           ),
           Positioned(
-            right: 200,
-            bottom: 200,
+            right: 50,
+            bottom: 50,
             child: FloatingActionButton(
-              child: Text("使组件可见"),
+              child: Center(
+                child: Text("Make It Visible"),
+              ),
               onPressed: _makeVisible,
             ),
           ),
@@ -76,6 +78,22 @@ class _ScrollVisibleState extends State<ScrollVisible> {
   }
 
   void _makeVisible() {
-    Scrollable.ensureVisible(_visibleKey.currentContext);
+    var object = _visibleKey.currentContext.findRenderObject();
+    var position = Scrollable.of(_visibleKey.currentContext).position;
+    final RenderAbstractViewport viewport = RenderAbstractViewport.of(object);
+    double max = viewport
+        .getOffsetToReveal(object, 0.0)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent) as double;
+    double min = viewport
+        .getOffsetToReveal(object, 1.0)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent) as double;
+    if (position.pixels >= min && position.pixels <= max) {
+      Scaffold.of(_visibleKey.currentContext)
+          .showSnackBar(SnackBar(content: Text("无需滚动")));
+      return;
+    }
+    position.jumpTo(position.pixels.clamp(min, max));
   }
 }
